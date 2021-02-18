@@ -12,7 +12,10 @@ public class GameController {
 
     private char[][] gameField = new char[3][3];        //игровое поле 3х3
     private int gameMode = 2;
+    private int emptyField = 9;
     private boolean endGame = false;
+    private String player1name = "Player 1";
+    private String player2name = "Player 2";
 
     private GameController() {}
 
@@ -23,6 +26,22 @@ public class GameController {
             }
             return instance;
         }
+    }
+
+    public void setPlayer1name(String name){
+        this.player1name = name;
+    }
+
+    public void setPlayer2name(String name){
+        this.player2name = name;
+    }
+
+    public String getPlayer1name() {
+        return  player1name;
+    }
+
+    public String getPlayer2name() {
+        return  player2name;
     }
 
     public void startGame(){                          //Публичный метод, запускающий игровой процесс
@@ -80,11 +99,20 @@ public class GameController {
             int y;
 
             drawField();
+            endGameConditionsCheck();
 
-            if(flag) System.out.println("Ход игрока 1!");
-            else System.out.println("Ход Игрока 2!");
+            if(endGame) {
+                System.out.println("Game Over!");
+                if(emptyField == 0) { System.out.println("Draw! Noone wins!");}
+                else if(!flag) {System.out.println(player1name + " wins!");}
+                else {System.out.println(player2name +" wins!");}
+                break;
+            }
 
-            System.out.println("Введите координату ячейки (прим. A 0):");
+            if(flag) System.out.println(player1name + " turn!");
+            else System.out.println(player2name + " turn!");
+
+            System.out.println("Enter cell coordinate(ex. A 0):");
 
             try {
                 String input = reader.readLine().toUpperCase();
@@ -110,18 +138,52 @@ public class GameController {
                     else {gameField[x][y] = 'O';}                           // исключения и вызов метода continue
                     flag =! flag;
                 } else {
-                    System.out.println("Поле занято!");
+                    System.out.println("Cell occupied!");
                     throw new IOException();
                 }
             } catch (ArrayIndexOutOfBoundsException | NumberFormatException | IOException exception) {
-                System.out.println("Некорректный ввод");
-                continue;
+                System.out.println("Incorrect input");
             }
-
         }
     }
 
-    private void endGameConditionCheck() {      // Вариант реализации: проверка по каждому варианту завершения игры (9 исходов: 8 побед, 1 ничья)
+    private void endGameConditionsCheck() {      // Вариант реализации: проверка по каждому варианту завершения игры (9 исходов: 8 побед, 1 ничья)
 
+        emptyField = 9;
+
+        for (int a = 0; a < 3; a++){            // проверка по столбцам
+            if(gameField[a][0] != ' ' && gameField[a][0] == gameField[a][1] && gameField[a][0] == gameField[a][2]){
+                endGame = true;
+                break;
+            }
+        }
+
+        for (int a = 0; a < 3; a++){            // проверка по строкам
+            if (gameField[0][a] != ' ' && gameField[0][a] == gameField[1][a] && gameField[0][a] == gameField[2][a]) {
+                endGame = true;
+                break;
+            }
+        }
+
+        // проверка по диагонали свреху слева до вниз справа
+        if(gameField[0][0] != ' ' && gameField[0][0] == gameField[1][1] && gameField[0][0] == gameField[2][2]){
+            endGame = true;
+        }
+
+        // проверка по диагонали снизу слева до сверху справа
+        if(gameField[0][2] != ' ' && gameField[0][2] == gameField[1][1] && gameField[0][2] == gameField[2][0]){
+            endGame = true;
+        }
+
+        for(int a = 0; a < 3; a++) {                    // проверка на ничью
+            for(int b = 0; b < 3; b++) {
+                if(gameField[a][b] != ' '){
+                    emptyField--;
+                    if(emptyField == 0) {
+                        endGame = true;
+                    }
+                }
+            }
+        }
     }
 }
