@@ -10,8 +10,9 @@ public class GameController {
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-    private char[][] gameField = new char[3][3];        //игровое поле 3х3
-    private int gameMode = 2;
+    private static char[][] gameField = new char[3][3];        //игровое поле 3х3
+    private static int turnCounter = 1;
+    private static int gameMode = 2;
     private int emptyField = 9;
     private boolean endGame = false;
     private String player1name = "Player 1";
@@ -77,12 +78,11 @@ public class GameController {
         System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \n Type number to choose the game mode");
 
         try{
-            gameMode = Integer.parseInt(reader.readLine());     //! переделать под switch!
+            gameMode = Integer.parseInt(reader.readLine());
             if(gameMode != 1 && gameMode != 2) {                // Если gameMode не равен ожидаемому значению, то
                 gameMode = 2;                                   // выбрасывается исключение. Значение gameMode
                 throw new IOException();                        // устанавливается по умолчанию. Процедура ввода
-            }                                                   // повторяется пока игра не получит ожидаемое значение, после
-                                                                // чего поток закрывается
+            }                                                   // повторяется пока игра не получит ожидаемое значение
         } catch (IOException | NumberFormatException exception) {
             System.out.println("Incorrect Input");
             chooseGameMode();
@@ -103,14 +103,18 @@ public class GameController {
 
             if(endGame) {
                 System.out.println("Game Over!");
-                if(emptyField == 0) { System.out.println("Draw! Noone wins!");}
+                if(emptyField == 0) { System.out.println("Draw! No one wins!");}
                 else if(!flag) {System.out.println(player1name + " wins!");}
                 else {System.out.println(player2name +" wins!");}
                 break;
             }
 
             if(flag) System.out.println(player1name + " turn!");
-            else System.out.println(player2name + " turn!");
+            else {
+                System.out.println(player2name + " turn!");
+            }
+
+            AI.makeMove();
 
             System.out.println("Enter cell coordinate(ex. A 0):");
 
@@ -135,7 +139,7 @@ public class GameController {
 
                 if(gameField[x][y] ==' '){                                  // Если поле не занято, происходит ввод
                     if(flag) {gameField[x][y] = 'X';}                       // соответствующего символа, иначе выброс
-                    else {gameField[x][y] = 'O';}                           // исключения и вызов метода continue
+                    else {gameField[x][y] = '0';}                           // исключения
                     flag =! flag;
                 } else {
                     System.out.println("Cell occupied!");
@@ -147,32 +151,36 @@ public class GameController {
         }
     }
 
-    private void endGameConditionsCheck() {      // Вариант реализации: проверка по каждому варианту завершения игры (9 исходов: 8 побед, 1 ничья)
+    private void endGameConditionsCheck() {
 
         emptyField = 9;
 
         for (int a = 0; a < 3; a++){            // проверка по столбцам
             if(gameField[a][0] != ' ' && gameField[a][0] == gameField[a][1] && gameField[a][0] == gameField[a][2]){
                 endGame = true;
-                break;
+                return;
             }
         }
 
         for (int a = 0; a < 3; a++){            // проверка по строкам
             if (gameField[0][a] != ' ' && gameField[0][a] == gameField[1][a] && gameField[0][a] == gameField[2][a]) {
                 endGame = true;
-                break;
+                return;
             }
         }
 
         // проверка по диагонали свреху слева до вниз справа
         if(gameField[0][0] != ' ' && gameField[0][0] == gameField[1][1] && gameField[0][0] == gameField[2][2]){
             endGame = true;
+            return;
         }
+
+
 
         // проверка по диагонали снизу слева до сверху справа
         if(gameField[0][2] != ' ' && gameField[0][2] == gameField[1][1] && gameField[0][2] == gameField[2][0]){
             endGame = true;
+            return;
         }
 
         for(int a = 0; a < 3; a++) {                    // проверка на ничью
@@ -181,9 +189,113 @@ public class GameController {
                     emptyField--;
                     if(emptyField == 0) {
                         endGame = true;
+                        return;
                     }
                 }
             }
+        }
+    }
+
+    private static class AI {
+
+        static boolean isMoved = false;
+
+        static void makeMove() {           // Алгоритм хода ИИ. Если метод defence соверщил ход - метод offence игнорируется.
+            defence();                     // Переременая isMoved возвращается к исходному значению.
+            if(!isMoved) { offence(); }
+            isMoved = false;
+        }
+
+        private static void defence() {
+
+
+            mainLoop:                              // Пробег по всем полям
+            for(int a = 0; a < 3; a++){
+                                                    // Переменные для рядов
+                int xColumnCells = 0;               // Счётчик занятых противником клеток в ряду
+                int emptyColumnCells = 3;           // Счетчик пустых клеток в ряду
+                int xColumnAxis = 0;                // координата заменяемой ячейки по горизонтали
+                int yColumnAxis = 0;                // координата заменяемой ячейки по вертикали
+                                                    // Переменные для строк
+                int xRowCells = 0;                  // см. Переменные для рядов
+                int emptyRowCells = 3;
+                int xRowAxis = 0;
+                int yRowAxis = 0;
+
+                for(int b = 0; b < 3; b++) {
+                    if (gameField[a][b] == 'X') {       // Проверка по столбцам
+                        xColumnCells++;
+                        emptyColumnCells--;
+
+                    } else if(gameField[a][b] == ' '){  // Захват координат последнего пустого поля в ряду
+                        xColumnAxis = a;
+                        yColumnAxis = b;
+                    }
+                                                        // Меняет значение ячейки по полученным координатам, если в ряду присутствует потенциальое поражение ИИ.
+                    if(xColumnCells == 2 && emptyColumnCells == 1 && gameField[xColumnAxis][yColumnAxis] == ' ') {
+                        gameField[xColumnAxis][yColumnAxis] = '0';
+                        isMoved = true;
+                        return;
+                    }
+
+                    if (gameField[b][a] == 'X') {       // Проверка по строкам
+                        xRowCells++;
+                        emptyRowCells--;
+
+                    } else if(gameField[b][a] == ' '){
+                        xRowAxis = b;
+                        yRowAxis = a;
+                    }
+
+                    if(xRowCells == 2 && emptyRowCells == 1 && gameField[xRowAxis][yRowAxis] == ' ') {
+                        gameField[xRowAxis][yRowAxis] = '0';
+                        isMoved = true;
+                        return;
+                    }
+                }
+            }
+
+            int xDiagTopLeft = 0;                       // Левая верхняя диагональ
+            int axisDiagTopLeft = 0;
+
+            for(int a = 0; a < 3; a++){
+                if(gameField[a][a] == 'X') {
+                    xDiagTopLeft++;
+                } else if(gameField[a][a] == ' '){
+                    axisDiagTopLeft = a;
+                }
+
+                if(xDiagTopLeft == 2 && gameField[axisDiagTopLeft][axisDiagTopLeft] == ' '){
+                    gameField[axisDiagTopLeft][axisDiagTopLeft] = '0';
+                    isMoved = true;
+                    return;
+                }
+            }
+
+            int xDiagTopRight = 0;                          // Правая верхняя диагональ
+            int xAxisDiagTopRight = 0;
+            int yAxisDiagTopRight = 0;
+            int diagOffset = 2;
+
+            for(int a = 0; a < 3; a++) {
+                if(gameField[a][diagOffset] == 'X') {
+                    xDiagTopRight++;
+                } else if(gameField[a][diagOffset] == ' '){
+                    xAxisDiagTopRight = a;
+                    yAxisDiagTopRight = diagOffset;
+                }
+                if(xDiagTopRight == 2 && gameField[xAxisDiagTopRight][yAxisDiagTopRight] == ' '){
+                    gameField[xAxisDiagTopRight][yAxisDiagTopRight] = '0';
+                    isMoved = true;
+                    return;
+                }
+
+                diagOffset--;
+            }
+        }
+
+        private static void offence() {
+
         }
     }
 }
