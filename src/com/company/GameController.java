@@ -105,18 +105,19 @@ public class GameController {
                 System.out.println("Game Over!");
                 if(emptyField == 0) { System.out.println("Draw! No one wins!");}
                 else if(!flag) {System.out.println(player1name + " wins!");}
-                else {System.out.println(player2name +" wins!");}
-                break;
+                else if(gameMode == 1) {System.out.println(player2name +" wins!");}
+                else if(gameMode == 2) {System.out.println("AI wins!");}
+                System.exit(0);
             }
 
-            if(flag) System.out.println(player1name + " turn!");
-            else {
-                System.out.println(player2name + " turn!");
+            if(flag) System.out.println(player1name + " turn! Enter cell coordinate(ex. A 0):");
+            else if(gameMode == 1){ System.out.println(player2name + " turn! Enter cell coordinate(ex. A 0):"); }
+            else { System.out.println("AI turn!"); }
+
+            if(gameMode == 2 && !flag) {
+                AI.makeMove();
+                actionPhase();
             }
-
-            AI.makeMove();
-
-            System.out.println("Enter cell coordinate(ex. A 0):");
 
             try {
                 String input = reader.readLine().toUpperCase();
@@ -175,8 +176,6 @@ public class GameController {
             return;
         }
 
-
-
         // проверка по диагонали снизу слева до сверху справа
         if(gameField[0][2] != ' ' && gameField[0][2] == gameField[1][1] && gameField[0][2] == gameField[2][0]){
             endGame = true;
@@ -198,18 +197,12 @@ public class GameController {
 
     private static class AI {
 
-        static boolean isMoved = false;
-
         static void makeMove() {           // Алгоритм хода ИИ. Если метод defence соверщил ход - метод offence игнорируется.
-            defence();                     // Переременая isMoved возвращается к исходному значению.
-            if(!isMoved) { offence(); }
-            isMoved = false;
+            if(defence()) { offence(); }
         }
 
-        private static void defence() {
-
-
-            mainLoop:                              // Пробег по всем полям
+        private static boolean defence() {
+                                                    // Пробег по всем полям
             for(int a = 0; a < 3; a++){
                                                     // Переменные для рядов
                 int xColumnCells = 0;               // Счётчик занятых противником клеток в ряду
@@ -234,8 +227,7 @@ public class GameController {
                                                         // Меняет значение ячейки по полученным координатам, если в ряду присутствует потенциальое поражение ИИ.
                     if(xColumnCells == 2 && emptyColumnCells == 1 && gameField[xColumnAxis][yColumnAxis] == ' ') {
                         gameField[xColumnAxis][yColumnAxis] = '0';
-                        isMoved = true;
-                        return;
+                        return false;
                     }
 
                     if (gameField[b][a] == 'X') {       // Проверка по строкам
@@ -249,8 +241,7 @@ public class GameController {
 
                     if(xRowCells == 2 && emptyRowCells == 1 && gameField[xRowAxis][yRowAxis] == ' ') {
                         gameField[xRowAxis][yRowAxis] = '0';
-                        isMoved = true;
-                        return;
+                        return false;
                     }
                 }
             }
@@ -267,8 +258,7 @@ public class GameController {
 
                 if(xDiagTopLeft == 2 && gameField[axisDiagTopLeft][axisDiagTopLeft] == ' '){
                     gameField[axisDiagTopLeft][axisDiagTopLeft] = '0';
-                    isMoved = true;
-                    return;
+                    return false;
                 }
             }
 
@@ -286,16 +276,33 @@ public class GameController {
                 }
                 if(xDiagTopRight == 2 && gameField[xAxisDiagTopRight][yAxisDiagTopRight] == ' '){
                     gameField[xAxisDiagTopRight][yAxisDiagTopRight] = '0';
-                    isMoved = true;
-                    return;
+                    return false;
                 }
 
                 diagOffset--;
             }
+
+            return true;
         }
 
-        private static void offence() {
+        private static void offence() {                 // Набросок атаки ИИ. Приоритет на захват центра. Дальше рандом,
+            int a = 0;                                  // ессли не вызывается метод defence. Если будет время - сделать нормальный ИИ.
+            int b = 2;
 
+            int xAxis = a + (int) (Math.random() * b) ;
+            int yAxis = a + (int) (Math.random() * b) ;;
+
+            if(gameField[1][1] == ' ') {
+                gameField[1][1] = '0';
+                return;
+            }
+
+            if(gameField[xAxis][yAxis] != ' '){
+                offence();
+            } else {
+                gameField[xAxis][yAxis] = '0';
+                return;
+            }
         }
     }
 }
