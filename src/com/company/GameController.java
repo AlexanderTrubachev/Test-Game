@@ -29,18 +29,13 @@ public class GameController {
         }
     }
 
-    public void setPlayer1name(String name){
-        this.player1name = name;
-    }
-
+    public void setPlayer1name(String name){ this.player1name = name;  }
     public void setPlayer2name(String name){
         this.player2name = name;
     }
-
     public String getPlayer1name() {
         return  player1name;
     }
-
     public String getPlayer2name() {
         return  player2name;
     }
@@ -75,7 +70,7 @@ public class GameController {
     private void chooseGameMode() {                      // Выбор режима игры: против игрока или против ИИ.
                                                          // По умолчанию выставлен режим против ИИ.
 
-        System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \n Type number to choose the game mode");
+        System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \nType number to choose the game mode");
 
         try{
             gameMode = Integer.parseInt(reader.readLine());
