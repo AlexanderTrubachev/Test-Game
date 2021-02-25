@@ -1,9 +1,8 @@
 package com.company;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Player implements  Serializable {
+public class Player {
     private int id;
     private String name;
     private String password;
@@ -26,6 +25,10 @@ public class Player implements  Serializable {
     public String getPlayerName() {
         return name;
     }
+
+    public void setPlayerName(String name) {this.name = name;}
+
+    public void setPlayerPassword(String password) {this.password = password;}
 
     public boolean passwordCheck(String password) {
         if(this.password.equals(password)) { return true; }

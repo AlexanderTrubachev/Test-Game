@@ -15,8 +15,8 @@ public class GameController {
     private static int gameMode = 2;
     private int emptyField = 9;
     private boolean endGame = false;
-    private String player1name = "Player 1";
-    private String player2name = "Player 2";
+    private Player player1;
+    private Player player2;
 
     private GameController() {}
 
@@ -29,20 +29,21 @@ public class GameController {
         }
     }
 
-    public void setPlayer1name(String name){ this.player1name = name;  }
-    public void setPlayer2name(String name){
-        this.player2name = name;
+    public void setPlayer1(Player player1) {
+        this.player1 = player1;
     }
-    public String getPlayer1name() {
-        return  player1name;
+
+    public void setPlayer2(Player player2) {
+        this.player2 = player2;
     }
-    public String getPlayer2name() {
-        return  player2name;
+
+    public void setGameMode(int x) {
+        gameMode = x;
     }
 
     public void startGame(){                          //Публичный метод, запускающий игровой процесс
         initGameField();
-        chooseGameMode();
+        //chooseGameMode();
         actionPhase();
         try {
             reader.close();
@@ -67,7 +68,7 @@ public class GameController {
 
     }
 
-    private void chooseGameMode() {                      // Выбор режима игры: против игрока или против ИИ.
+    /*private void chooseGameMode() {                      // Выбор режима игры: против игрока или против ИИ.
                                                          // По умолчанию выставлен режим против ИИ.
 
         System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \nType number to choose the game mode");
@@ -83,7 +84,7 @@ public class GameController {
             chooseGameMode();
         }
 
-    }
+    }*/
 
     private void actionPhase() {               // Активная фаза игры. Ввод игроками координат
 
@@ -99,14 +100,24 @@ public class GameController {
             if(endGame) {
                 System.out.println("Game Over!");
                 if(emptyField == 0) { System.out.println("Draw! No one wins!");}
-                else if(!flag) {System.out.println(player1name + " wins!");}
-                else if(gameMode == 1) {System.out.println(player2name +" wins!");}
-                else if(gameMode == 2) {System.out.println("AI wins!");}
-                System.exit(0);
+                else if(!flag) {
+                    System.out.println(player1.getPlayerName() + " wins!");
+                    player1.gamesWonInc();
+                }
+                else if(gameMode == 1) {
+                    System.out.println(player2.getPlayerName() +" wins!");
+                    player2.gamesWonInc();
+                }
+                else if(gameMode == 2) {
+                    System.out.println("AI wins!");
+                }
+                player1.gamesTotalInc();
+                if(player2 != null) { player2.gamesTotalInc(); }
+                WelcomeMenu.getInstance().start();
             }
 
-            if(flag) System.out.println(player1name + " turn! Enter cell coordinate(ex. A 0):");
-            else if(gameMode == 1){ System.out.println(player2name + " turn! Enter cell coordinate(ex. A 0):"); }
+            if(flag) System.out.println(player1.getPlayerName() + " turn! Enter cell coordinate(ex. A 0):");
+            else if(gameMode == 1){ System.out.println(player2.getPlayerName() + " turn! Enter cell coordinate(ex. A 0):"); }
             else { System.out.println("AI turn!"); }
 
             if(gameMode == 2 && !flag) {
@@ -293,7 +304,7 @@ public class GameController {
             }
 
             if(gameField[xAxis][yAxis] != ' '){
-                offence();
+                offence();                              // Баг: при определенных условиях вылетает StackOverflow
             } else {
                 gameField[xAxis][yAxis] = '0';
                 return;
