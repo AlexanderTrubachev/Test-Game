@@ -195,7 +195,7 @@ public class WelcomeMenu {
     }
 
     private void loginMenu(Player player) throws IOException {
-        System.out.println("Available commands: \nstart - launch the game \nstats - show stats \nup - update account data \nlogoff - return to main menu");
+        System.out.println("Available commands: \nstart - launch the game \nstats - show stats \nup - update account data \ngamelogs - show list of played games \nshow game - show game log \nlogoff - return to main menu");
 
         String loginInput = reader.readLine();
 
@@ -209,6 +209,22 @@ public class WelcomeMenu {
             }
             case "up": {
                 updateAcc(player);
+                loginMenu(player);
+            }
+            case "gamelogs": {
+                player.showGamesID();
+                loginMenu(player);
+            }
+            case "show game": {
+                System.out.println("Enter game id");
+                String inputID = reader.readLine();
+                try {
+                    player.showGameLog(Integer.parseInt(inputID));
+                } catch (NumberFormatException e) {
+                    System.out.println("Incorrect input");
+                } finally {
+                    loginMenu(player);
+                }
             }
             case "logoff": {
                 System.out.println("Logoff complete");

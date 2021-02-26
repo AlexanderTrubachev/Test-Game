@@ -11,12 +11,12 @@ public class GameController {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     private static char[][] gameField = new char[3][3];        //игровое поле 3х3
-    private static int turnCounter = 1;
     private static int gameMode = 2;
     private int emptyField = 9;
     private boolean endGame = false;
     private Player player1;
     private Player player2;
+    static GameLog logger;
 
     private GameController() {}
 
@@ -43,7 +43,7 @@ public class GameController {
 
     public void startGame(){                          //Публичный метод, запускающий игровой процесс
         initGameField();
-        //chooseGameMode();
+        logger = new GameLog();
         actionPhase();
         try {
             reader.close();
@@ -68,24 +68,6 @@ public class GameController {
 
     }
 
-    /*private void chooseGameMode() {                      // Выбор режима игры: против игрока или против ИИ.
-                                                         // По умолчанию выставлен режим против ИИ.
-
-        System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \nType number to choose the game mode");
-
-        try{
-            gameMode = Integer.parseInt(reader.readLine());
-            if(gameMode != 1 && gameMode != 2) {                // Если gameMode не равен ожидаемому значению, то
-                gameMode = 2;                                   // выбрасывается исключение. Значение gameMode
-                throw new IOException();                        // устанавливается по умолчанию. Процедура ввода
-            }                                                   // повторяется пока игра не получит ожидаемое значение
-        } catch (IOException | NumberFormatException exception) {
-            System.out.println("Incorrect Input");
-            chooseGameMode();
-        }
-
-    }*/
-
     private void actionPhase() {               // Активная фаза игры. Ввод игроками координат
 
         boolean flag = true;                   // flag - true: ход 1 игрока, flag - false: ход 2 игрока
@@ -99,20 +81,31 @@ public class GameController {
 
             if(endGame) {
                 System.out.println("Game Over!");
-                if(emptyField == 0) { System.out.println("Draw! No one wins!");}
+                if(emptyField == 0) {
+                    System.out.println("Draw! No one wins!");
+                    logger.setGameRes("Draw");
+                }
                 else if(!flag) {
                     System.out.println(player1.getPlayerName() + " wins!");
                     player1.gamesWonInc();
+                    logger.setGameRes(player1.getPlayerName() + " won");
                 }
                 else if(gameMode == 1) {
                     System.out.println(player2.getPlayerName() +" wins!");
+                    player2.gameLogs.add(logger);
+                    logger.setGameRes(player2.getPlayerName() + " won");
                     player2.gamesWonInc();
                 }
                 else if(gameMode == 2) {
                     System.out.println("AI wins!");
+                    logger.setGameRes("AI won");
                 }
+
+                player1.gameLogs.add(logger);
                 player1.gamesTotalInc();
                 if(player2 != null) { player2.gamesTotalInc(); }
+
+                System.out.println("Game log saved with ID: " + logger.getGameID());
                 WelcomeMenu.getInstance().start();
             }
 
@@ -127,6 +120,7 @@ public class GameController {
 
             try {
                 String input = reader.readLine().toUpperCase();
+                String logBuffer = input;
 
                 String[] coordinates;
                 coordinates = input.split(" ");
@@ -145,8 +139,14 @@ public class GameController {
                 y = Integer.parseInt(coordinates[0]);
 
                 if(gameField[x][y] ==' '){                                  // Если поле не занято, происходит ввод
-                    if(flag) {gameField[x][y] = 'X';}                       // соответствующего символа, иначе выброс
-                    else {gameField[x][y] = '0';}                           // исключения
+                    if(flag) {                                              // соответствующего символа, иначе выброс
+                        gameField[x][y] = 'X';                              // исключения
+                        logger.gameLog.add(player1.getPlayerName() + " (X)" + " : " + input);
+                    }
+                    else {
+                        gameField[x][y] = '0';
+                        logger.gameLog.add(player2.getPlayerName() + " (0)" + " : " + input);
+                    }
                     flag =! flag;
                 } else {
                     System.out.println("Cell occupied!");
@@ -233,6 +233,7 @@ public class GameController {
                                                         // Меняет значение ячейки по полученным координатам, если в ряду присутствует потенциальое поражение ИИ.
                     if(xColumnCells == 2 && emptyColumnCells == 1 && gameField[xColumnAxis][yColumnAxis] == ' ') {
                         gameField[xColumnAxis][yColumnAxis] = '0';
+                        GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(xColumnAxis) +" " + yColumnAxis);
                         return false;
                     }
 
@@ -246,6 +247,7 @@ public class GameController {
                     }
 
                     if(xRowCells == 2 && emptyRowCells == 1 && gameField[xRowAxis][yRowAxis] == ' ') {
+                        GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(xRowAxis) +" " + yRowAxis);
                         gameField[xRowAxis][yRowAxis] = '0';
                         return false;
                     }
@@ -263,6 +265,7 @@ public class GameController {
                 }
 
                 if(xDiagTopLeft == 2 && gameField[axisDiagTopLeft][axisDiagTopLeft] == ' '){
+                    GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(axisDiagTopLeft) +" " + axisDiagTopLeft);
                     gameField[axisDiagTopLeft][axisDiagTopLeft] = '0';
                     return false;
                 }
@@ -281,6 +284,7 @@ public class GameController {
                     yAxisDiagTopRight = diagOffset;
                 }
                 if(xDiagTopRight == 2 && gameField[xAxisDiagTopRight][yAxisDiagTopRight] == ' '){
+                    GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(xAxisDiagTopRight) +" " + yAxisDiagTopRight);
                     gameField[xAxisDiagTopRight][yAxisDiagTopRight] = '0';
                     return false;
                 }
@@ -292,23 +296,33 @@ public class GameController {
         }
 
         private static void offence() {                 // Набросок атаки ИИ. Приоритет на захват центра. Дальше рандом,
-            int a = 0;                                  // ессли не вызывается метод defence. Если будет время - сделать нормальный ИИ.
-            int b = 2;
+            int b = 2;                                  // если не вызывается метод defence. Если будет время - сделать нормальный ИИ.
 
-            int xAxis = a + (int) (Math.random() * b) ;
-            int yAxis = a + (int) (Math.random() * b) ;;
+            int xAxis = (int) (Math.random() * b) ;
+            int yAxis = (int) (Math.random() * b) ;;
 
             if(gameField[1][1] == ' ') {
+                GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(1) +" " + 1);
                 gameField[1][1] = '0';
                 return;
             }
 
-            if(gameField[xAxis][yAxis] != ' '){
+            if(gameField[xAxis][yAxis] != ' ') {
                 offence();                              // Баг: при определенных условиях вылетает StackOverflow
             } else {
+                GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(xAxis) +" " + yAxis);
                 gameField[xAxis][yAxis] = '0';
                 return;
             }
+        }
+
+        private static String coordinateReplacer (int x) {
+            switch (x){
+                case 0: { return "A";}
+                case 1: { return "B";}
+                case 2: { return "C";}
+            }
+            return null;
         }
     }
 }

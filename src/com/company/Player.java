@@ -10,7 +10,7 @@ public class Player {
     private int gamesTotal = 0;
     private int gamesWon = 0;
 
-    ArrayList<Integer> gamesID = new ArrayList<>();
+    ArrayList<GameLog> gameLogs = new ArrayList<>();
 
     public Player(String name, String password) {
         id = (int) (Math.random() * 10000);
@@ -38,6 +38,24 @@ public class Player {
     @Override
     public String toString() {
         return "Player " + name + " stats: \n Games played: " + gamesTotal + "\n Games Won: " + gamesWon;
+    }
+
+    public void showGamesID() {
+        int counter = 0;
+        for(GameLog log: gameLogs){
+            System.out.println(counter + ". " + log.getGameID());
+            counter++;
+        }
+    }
+
+    public void showGameLog(int id) {
+       for(GameLog x: gameLogs) {
+           if(x.getGameID() == id) {
+               x.printGameLog();
+               return;
+           }
+       }
+       System.out.println("Game log not found");
     }
 
     public void gamesTotalInc() { this.gamesTotal++; }
