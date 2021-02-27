@@ -1,16 +1,12 @@
 package com.company;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 
 
-public class WelcomeMenu {
+public class WelcomeMenu implements Serializable {
     private static WelcomeMenu instance;
     ArrayList<Player> playersList = new ArrayList<>();
-
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     private WelcomeMenu() {}
 
@@ -23,6 +19,7 @@ public class WelcomeMenu {
 
     public void start() {
         try {
+            loadState();
             System.out.println("Welcome to Tic Tac Toe game. \nTo play the game you need to create an account or use already existing. \nYou can see available commands by typing \"help\"");
             welcomeMenu();
         } catch (IOException e){
@@ -36,7 +33,7 @@ public class WelcomeMenu {
         System.out.println("Welcome to main menu \nEnter command");
 
         while (true) {
-                input = reader.readLine();
+                input = Main.reader.readLine();
 
             switch (input) {
                 case "help": {
@@ -79,6 +76,8 @@ public class WelcomeMenu {
                 }
 
                 case "exit": {
+                    saveState();
+                    Main.reader.close();
                     System.exit(0);
                 }
 
@@ -96,7 +95,7 @@ public class WelcomeMenu {
 
         System.out.println("Enter preferred username");
         while (true) {
-            name = reader.readLine();
+            name = Main.reader.readLine();
 
             for(Player x: playersList) {
                 if(name.equals(x.getPlayerName())) {
@@ -106,7 +105,7 @@ public class WelcomeMenu {
             }
 
             System.out.println("Enter preferred password");
-            password = reader.readLine();
+            password = Main.reader.readLine();
 
             playersList.add(new Player(name, password));
             System.out.println("User created");
@@ -121,7 +120,7 @@ public class WelcomeMenu {
         Player player = null;
 
         System.out.println("Enter username");
-        name = WelcomeMenu.getInstance().reader.readLine();
+        name = Main.reader.readLine();
 
         for(Player x: WelcomeMenu.getInstance().playersList) {
             if(name.equals(x.getPlayerName())){
@@ -136,7 +135,7 @@ public class WelcomeMenu {
         }
 
         System.out.println("Enter password");
-        password = WelcomeMenu.getInstance().reader.readLine();
+        password = Main.reader.readLine();
 
         if(player.passwordCheck(password)){
             System.out.println("Login complete! Welcome " + name + "!");
@@ -173,12 +172,12 @@ public class WelcomeMenu {
     private void deleteAccount() throws IOException {
         System.out.println("Enter account name to delete account:");
 
-        String deleteInput = reader.readLine();
+        String deleteInput = Main.reader.readLine();
 
         for(Player x: playersList){
             if(x.getPlayerName().equals(deleteInput)) {
                 System.out.println("Enter password");
-                deleteInput = reader.readLine();
+                deleteInput = Main.reader.readLine();
                 if (x.passwordCheck(deleteInput)) {
                     playersList.remove(x);
                     System.out.println("Account deleted");
@@ -197,7 +196,7 @@ public class WelcomeMenu {
     private void loginMenu(Player player) throws IOException {
         System.out.println("Available commands: \nstart - launch the game \nstats - show stats \nup - update account data \ngamelogs - show list of played games \nshow game - show game log \nlogoff - return to main menu");
 
-        String loginInput = reader.readLine();
+        String loginInput = Main.reader.readLine();
 
         switch (loginInput) {
             case "start": {
@@ -217,7 +216,7 @@ public class WelcomeMenu {
             }
             case "show game": {
                 System.out.println("Enter game id");
-                String inputID = reader.readLine();
+                String inputID = Main.reader.readLine();
                 try {
                     player.showGameLog(Integer.parseInt(inputID));
                 } catch (NumberFormatException e) {
@@ -240,19 +239,19 @@ public class WelcomeMenu {
     private void updateAcc(Player player) throws IOException{
         System.out.println("Type \"name\" to change name or \"password\" to change password. If you dont want to change anything - type exit.");
 
-        String updateInput = reader.readLine();
+        String updateInput = Main.reader.readLine();
 
         switch (updateInput) {
             case "name": {
                 System.out.println("Enter new name:");
-                updateInput = reader.readLine();
+                updateInput = Main.reader.readLine();
                 player.setPlayerName(updateInput);
                 System.out.println("Update successful");
                 loginMenu(player);
             }
             case "password": {
                 System.out.println("Enter new password:");
-                updateInput = reader.readLine();
+                updateInput = Main.reader.readLine();
                 player.setPlayerPassword(updateInput);
                 System.out.println("Update successful");
                 loginMenu(player);
@@ -272,13 +271,13 @@ public class WelcomeMenu {
         Player player2 = null;
 
         System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \nType number to choose the game mode");
-        input = reader.readLine();
+        input = Main.reader.readLine();
 
         if(!input.equals("1") && !input.equals("2")) {
             System.out.println("Invalid input");
             startGame(player);
         } else if(input.equals("1")) {
-            GameController.getInstance().setGameMode(Integer.parseInt(input));
+            GameController.getInstance().setGameMode(1);
             System.out.println("Player 2 login");
             player2 = login();
 
@@ -288,6 +287,7 @@ public class WelcomeMenu {
             }
 
             if(player2 == null){
+                GameController.getInstance().setGameMode(2);
                 startGame(player);
             }
         }
@@ -296,5 +296,28 @@ public class WelcomeMenu {
         game.setPlayer1(player);
         game.setPlayer2(player2);
         game.startGame();
+    }
+
+    public void saveState() {
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream("state.sav"));
+            objectOutputStream.writeObject(playersList);
+            objectOutputStream.close();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    public void loadState() {
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream("state.sav"));
+            playersList = (ArrayList<Player>) objectInputStream.readObject();
+            objectInputStream.close();
+        } catch (FileNotFoundException e) {
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

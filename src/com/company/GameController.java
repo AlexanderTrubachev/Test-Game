@@ -1,14 +1,11 @@
 package com.company;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.Serializable;
 
-public class GameController {
+public class GameController implements Serializable {
 
     private static GameController instance;
-
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     private static char[][] gameField = new char[3][3];        //игровое поле 3х3
     private static int gameMode = 2;
@@ -45,11 +42,6 @@ public class GameController {
         initGameField();
         logger = new GameLog();
         actionPhase();
-        try {
-            reader.close();
-        } catch (IOException exception) {
-            exception.printStackTrace();
-        }
     }
 
     private void initGameField() {                  //инициализация массива gameField пробелами для корректного
@@ -106,6 +98,7 @@ public class GameController {
                 if(player2 != null) { player2.gamesTotalInc(); }
 
                 System.out.println("Game log saved with ID: " + logger.getGameID());
+                endGame = false;
                 WelcomeMenu.getInstance().start();
             }
 
@@ -119,7 +112,7 @@ public class GameController {
             }
 
             try {
-                String input = reader.readLine().toUpperCase();
+                String input = Main.reader.readLine().toUpperCase();
                 String logBuffer = input;
 
                 String[] coordinates;
@@ -296,10 +289,12 @@ public class GameController {
         }
 
         private static void offence() {                 // Набросок атаки ИИ. Приоритет на захват центра. Дальше рандом,
-            int b = 2;                                  // если не вызывается метод defence. Если будет время - сделать нормальный ИИ.
+                                                        // если не вызывается метод defence. Если будет время - сделать нормальный ИИ.
+            int xAxis = (int) (Math.random() * 3);
+            int yAxis = (int) (Math.random() * 3);
 
-            int xAxis = (int) (Math.random() * b) ;
-            int yAxis = (int) (Math.random() * b) ;;
+            System.out.println(xAxis);
+            System.out.println(yAxis);
 
             if(gameField[1][1] == ' ') {
                 GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(1) +" " + 1);
@@ -308,7 +303,7 @@ public class GameController {
             }
 
             if(gameField[xAxis][yAxis] != ' ') {
-                offence();                              // Баг: при определенных условиях вылетает StackOverflow
+                offence();
             } else {
                 GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(xAxis) +" " + yAxis);
                 gameField[xAxis][yAxis] = '0';

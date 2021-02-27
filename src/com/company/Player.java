@@ -1,8 +1,9 @@
 package com.company;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Player {
+public class Player implements Serializable {
     private int id;
     private String name;
     private String password;

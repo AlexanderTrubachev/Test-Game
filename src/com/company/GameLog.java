@@ -1,9 +1,10 @@
 package com.company;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class GameLog {
+public class GameLog implements Serializable {
     int id;
     Date date;
     String gameRes;
