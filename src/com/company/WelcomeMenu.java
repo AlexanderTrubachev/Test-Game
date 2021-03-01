@@ -6,18 +6,20 @@ import java.util.ArrayList;
 
 public class WelcomeMenu implements Serializable {
     private static WelcomeMenu instance;
-    ArrayList<Player> playersList = new ArrayList<>();
+    ArrayList<Player> playersList = new ArrayList<>();          //Список, хранящий всех игроков
 
     private WelcomeMenu() {}
 
-    public static WelcomeMenu getInstance() {
-        if(instance == null){
-            instance = new WelcomeMenu();
-        }
+    public static WelcomeMenu getInstance() {                  // Синглтон
+        synchronized (WelcomeMenu.class){
+            if(instance == null){
+                instance = new WelcomeMenu();
+            }
         return instance;
+        }
     }
 
-    public void start() {
+    public void start() {                                   // Публичный метод, запускающий работу приватных методов класса
         try {
             loadState();
             System.out.println("Welcome to Tic Tac Toe game. \nTo play the game you need to create an account or use already existing. \nYou can see available commands by typing \"help\"");
@@ -27,7 +29,7 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    private void welcomeMenu() throws IOException {
+    private void welcomeMenu() throws IOException {     // Стартовое меню программы
         String input;
 
         System.out.println("Welcome to main menu \nEnter command");
@@ -54,7 +56,7 @@ public class WelcomeMenu implements Serializable {
                     }
                 }
 
-                case "list": {
+                case "list": {                                          // Вывод списка всех игроков
                     if (playersList.size() == 0){
                         System.out.println("No players registered");
                         welcomeMenu();
@@ -89,8 +91,8 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    private void createUser() throws IOException {
-        String name;
+    private void createUser() throws IOException {        // Создание пользователя. Если пользователь с указанным именем
+        String name;                                      // уже существует - метод выводит сообщение и возвращает в меню
         String password;
 
         System.out.println("Enter preferred username");
@@ -113,9 +115,9 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    private Player login() throws IOException{
-        String name;
-        String password;
+    private Player login() throws IOException{              // Вход в аккаунт. Пользователь указывает имя, которое ищется по списку
+        String name;                                        // после чеего указывает пароль. Если имени не существует или пароль
+        String password;                                    // неверен - возвращается null, что ведет к переходу обратно в меню
 
         Player player = null;
 
@@ -147,9 +149,9 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    private void top10() throws IOException{
-        for (int a = 0; a < playersList.size() - 1; a++){
-            for (int b = 0; b < playersList.size() - a - 1; b++){
+    private void top10() throws IOException{                        // Выводит 10 лучших игроков по количеству сыгранных игр
+        for (int a = 0; a < playersList.size() - 1; a++){           // Список упорядовчивается пузырьковой сортировкой в
+            for (int b = 0; b < playersList.size() - a - 1; b++){   // порядке убывания и выводится первые 10 элементов
                 if(playersList.get(b).getGamesTotal() < playersList.get(b + 1).getGamesTotal()){
                     Player temp = playersList.get(b);
                     playersList.set(b, playersList.get(b + 1));
@@ -169,9 +171,8 @@ public class WelcomeMenu implements Serializable {
         welcomeMenu();
     }
 
-    private void deleteAccount() throws IOException {
-        System.out.println("Enter account name to delete account:");
-
+    private void deleteAccount() throws IOException {               // Удаление пользователя. Поиск по введенному имени,
+        System.out.println("Enter account name to delete account:");// после чего ввод пароля. В случае успеха - удаление аккаунта.
         String deleteInput = Main.reader.readLine();
 
         for(Player x: playersList){
@@ -193,7 +194,7 @@ public class WelcomeMenu implements Serializable {
         welcomeMenu();
     }
 
-    private void loginMenu(Player player) throws IOException {
+    private void loginMenu(Player player) throws IOException {      // Меню пользователя при входе в аккаунт
         System.out.println("Available commands: \nstart - launch the game \nstats - show stats \nup - update account data \ngamelogs - show list of played games \nshow game - show game log \nlogoff - return to main menu");
 
         String loginInput = Main.reader.readLine();
@@ -214,7 +215,7 @@ public class WelcomeMenu implements Serializable {
                 player.showGamesID();
                 loginMenu(player);
             }
-            case "show game": {
+            case "show game": {                                 // Показать игру по ID
                 System.out.println("Enter game id");
                 String inputID = Main.reader.readLine();
                 try {
@@ -236,7 +237,7 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    private void updateAcc(Player player) throws IOException{
+    private void updateAcc(Player player) throws IOException{       // Обновление данных аккаунта. Доступно изменение имени и пароля
         System.out.println("Type \"name\" to change name or \"password\" to change password. If you dont want to change anything - type exit.");
 
         String updateInput = Main.reader.readLine();
@@ -266,8 +267,8 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    private void startGame(Player player) throws IOException {
-        String input;
+    private void startGame(Player player) throws IOException {   // Запуск игры. Выбор режима игры. Авторизация второго
+        String input;                                           // игрока при необходимости
         Player player2 = null;
 
         System.out.println("Available game modes: \n 1.Player vs Player \n 2.Player vs AI \nType number to choose the game mode");
@@ -298,7 +299,7 @@ public class WelcomeMenu implements Serializable {
         game.startGame();
     }
 
-    public void saveState() {
+    public void saveState() {       // Сохранение состояния программы в отдельный файл
         try {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream("state.sav"));
             objectOutputStream.writeObject(playersList);
@@ -308,7 +309,7 @@ public class WelcomeMenu implements Serializable {
         }
     }
 
-    public void loadState() {
+    public void loadState() {   // Загрузка состояния программы из файла.
         try {
             ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream("state.sav"));
             playersList = (ArrayList<Player>) objectInputStream.readObject();

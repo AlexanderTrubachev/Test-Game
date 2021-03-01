@@ -113,7 +113,6 @@ public class GameController implements Serializable {
 
             try {
                 String input = Main.reader.readLine().toUpperCase();
-                String logBuffer = input;
 
                 String[] coordinates;
                 coordinates = input.split(" ");
@@ -307,11 +306,10 @@ public class GameController implements Serializable {
             } else {
                 GameController.logger.gameLog.add("AI (0)" + " : " + coordinateReplacer(xAxis) +" " + yAxis);
                 gameField[xAxis][yAxis] = '0';
-                return;
             }
         }
 
-        private static String coordinateReplacer (int x) {
+        private static String coordinateReplacer (int x) {  // Замена координат горизонтали на буквенные для записи игры
             switch (x){
                 case 0: { return "A";}
                 case 1: { return "B";}

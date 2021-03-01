@@ -11,7 +11,7 @@ public class Player implements Serializable {
     private int gamesTotal = 0;
     private int gamesWon = 0;
 
-    ArrayList<GameLog> gameLogs = new ArrayList<>();
+    ArrayList<GameLog> gameLogs = new ArrayList<>();      // Список игр, сыгранных игроком
 
     public Player(String name, String password) {
         id = (int) (Math.random() * 10000);
@@ -19,9 +19,7 @@ public class Player implements Serializable {
         this.password = password;
     }
 
-    public int getPlayerID() {
-        return id;
-    }
+    public int getPlayerID() { return id; }
 
     public String getPlayerName() {
         return name;
@@ -31,7 +29,7 @@ public class Player implements Serializable {
 
     public void setPlayerPassword(String password) {this.password = password;}
 
-    public boolean passwordCheck(String password) {
+    public boolean passwordCheck(String password) {        // Проверка пароля
         if(this.password.equals(password)) { return true; }
         else {return false;}
     }
@@ -41,7 +39,7 @@ public class Player implements Serializable {
         return "Player " + name + " stats: \n Games played: " + gamesTotal + "\n Games Won: " + gamesWon;
     }
 
-    public void showGamesID() {
+    public void showGamesID() {     // Вывод id сыгранных игр
         int counter = 0;
         for(GameLog log: gameLogs){
             System.out.println(counter + ". " + log.getGameID());
@@ -49,7 +47,7 @@ public class Player implements Serializable {
         }
     }
 
-    public void showGameLog(int id) {
+    public void showGameLog(int id) { // Вывод лога игры по id
        for(GameLog x: gameLogs) {
            if(x.getGameID() == id) {
                x.printGameLog();
